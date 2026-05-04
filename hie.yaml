@@ -1,0 +1,8 @@
+cradle:
+  cabal:
+    - path: "src"
+      component: "lib:hs-market-maker"
+    - path: "app"
+      component: "exe:hs-market-maker"
+    - path: "test"
+      component: "test:hs-market-maker-test"
