@@ -1,4 +1,4 @@
-# Revision history for hs-market-maker
+# Revision history for lmsr
 
 ## 0.1.0.0 -- YYYY-mm-dd
 
