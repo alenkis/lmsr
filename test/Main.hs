@@ -122,7 +122,7 @@ prop_pricesShiftInvariant = property $ do
 
 hanson_2outcome :: IO ()
 hanson_2outcome = do
-    let params = unsafeRight (mkMarketParams 2 100)
+    let params = unsafeRight (mkMarket 2 100)
         s0 = initialState params
         buy50 = unsafeRight (buyShares params 0 50)
         s1 = applyTrade s0 buy50
@@ -135,18 +135,18 @@ hanson_2outcome = do
     shouldBeNear "p(Yes) after" (head ps) pYes
     shouldBeNear "p(No)  after" (ps !! 1) (1 - pYes)
 
-genMarketParams :: Gen MarketParams
+genMarketParams :: Gen Market
 genMarketParams = do
     n <- Gen.int (Range.linear 2 8)
     b <- Gen.double (Range.linearFrac 1.0 1000.0)
-    pure (unsafeRight (mkMarketParams n b))
+    pure (unsafeRight (mkMarket n b))
 
-genState :: MarketParams -> Gen MarketState
+genState :: Market -> Gen MarketState
 genState params = do
     ts <- Gen.list (Range.linear 0 5) (genTrade params)
     pure (foldl' applyTrade (initialState params) ts)
 
-genTrade :: MarketParams -> Gen Trade
+genTrade :: Market -> Gen Trade
 genTrade params = do
     ds <- Gen.list (Range.singleton params.outcomes) (Gen.double (Range.linearFrac (-50) 50))
     pure (unsafeRight (mkTrade params (V.fromList ds)))

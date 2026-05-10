@@ -4,8 +4,8 @@ https://mason.gmu.edu/~rhanson/mktscore.pdf
 -}
 module LMSR (
     -- * Market parameters
-    MarketParams (..),
-    mkMarketParams,
+    Market (..),
+    mkMarket,
 
     -- * Market state
     MarketState,
@@ -32,22 +32,22 @@ module LMSR (
 import Data.Vector.Unboxed (Vector)
 import Data.Vector.Unboxed qualified as V
 
-data MarketParams = MarketParams
+data Market = Market
     { outcomes :: !Int
     , liquidity :: !Double
     }
     deriving stock (Eq, Show)
 
-mkMarketParams :: Int -> Double -> Either MarketError MarketParams
-mkMarketParams n b
+mkMarket :: Int -> Double -> Either MarketError Market
+mkMarket n b
     | n < 2 = Left (TooFewOutcomes n)
     | b <= 0 = Left (NonPositiveLiquidity b)
-    | otherwise = Right MarketParams{outcomes = n, liquidity = b}
+    | otherwise = Right Market{outcomes = n, liquidity = b}
 
 newtype MarketState = MarketState (Vector Double)
     deriving stock (Eq, Show)
 
-initialState :: MarketParams -> MarketState
+initialState :: Market -> MarketState
 initialState params = MarketState (V.replicate params.outcomes 0)
 
 applyTrade :: MarketState -> Trade -> MarketState
@@ -60,13 +60,13 @@ marketStateVector (MarketState v) = v
 newtype Trade = Trade (Vector Double)
     deriving stock (Eq, Show)
 
-mkTrade :: MarketParams -> Vector Double -> Either MarketError Trade
+mkTrade :: Market -> Vector Double -> Either MarketError Trade
 mkTrade params v
     | V.length v /= params.outcomes =
         Left (TradeShapeMismatch params.outcomes (V.length v))
     | otherwise = Right (Trade v)
 
-buyShares :: MarketParams -> Int -> Double -> Either MarketError Trade
+buyShares :: Market -> Int -> Double -> Either MarketError Trade
 buyShares params i shares
     | i < 0 || i >= params.outcomes = Left (OutcomeOutOfRange i)
     | shares <= 0 = Left (NonPositiveShares shares)
@@ -77,13 +77,13 @@ buyShares params i shares
 tradeVector :: Trade -> Vector Double
 tradeVector (Trade v) = v
 
-cost :: MarketParams -> MarketState -> Double
+cost :: Market -> MarketState -> Double
 cost params state =
     let b = params.liquidity
         ys = V.map (/ b) (marketStateVector state)
      in b * logSumExp ys
 
-prices :: MarketParams -> MarketState -> Vector Double
+prices :: Market -> MarketState -> Vector Double
 prices params state =
     let b = params.liquidity
         ys = V.map (/ b) (marketStateVector state)
@@ -92,7 +92,7 @@ prices params state =
         s = V.sum es
      in V.map (/ s) es
 
-tradeCost :: MarketParams -> MarketState -> Trade -> Double
+tradeCost :: Market -> MarketState -> Trade -> Double
 tradeCost params state trade =
     let b = params.liquidity
         q = marketStateVector state
@@ -104,7 +104,7 @@ tradeCost params state trade =
      in b * (lse ys' - lse ys)
 
 -- Theoretical maximum loss the market maker can suffer regardless of trading volume
-boundedLoss :: MarketParams -> Double
+boundedLoss :: Market -> Double
 boundedLoss params = params.liquidity * log (fromIntegral (params.outcomes :: Int))
 
 data MarketError

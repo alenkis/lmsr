@@ -16,7 +16,7 @@ main = do
 runServer :: IO ()
 runServer = do
     TIO.putStrLn "[engine] starting (stub)"
-    case Core.mkMarketParams 2 100 of
+    case Core.mkMarket 2 100 of
         Right params -> do
             let ps = Core.prices params (Core.initialState params)
             TIO.putStrLn $
